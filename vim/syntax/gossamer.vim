@@ -9,6 +9,11 @@ endif
 
 syntax case match
 
+" Long string literals (thousands of chars) exceed the default 'synmaxcol'
+" (3000); without this the closing quote is never found and the string bleeds
+" into following lines.
+setlocal synmaxcol=0
+
 syntax keyword gossamerKeyword as async await comptime const crate dyn enum extern fn
 syntax keyword gossamerKeyword impl let mod mut package pub self Self static
 syntax keyword gossamerKeyword struct super trait type unsafe use where yield
