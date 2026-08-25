@@ -8,7 +8,7 @@ repository = "https://github.com/gossamer-lang/gossamer-editor-support"
 
 [grammars.gossamer]
 repository = "https://github.com/gossamer-lang/gossamer-editor-support"
-commit = "4ba85695b58fca5fed46baafe32968300534c1e1"
+commit = "6d9c617796c903f85c3667a94e86071d1f25c8d3"
 path = "tree-sitter-gossamer"
 
 [language_servers.gossamer-lsp]
