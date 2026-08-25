@@ -38,8 +38,16 @@ syntax match gossamerNumber "\<0b[01_]\+\%([iuf]\%(8\|16\|32\|64\|128\|size\)\)\
 syntax match gossamerNumber "\<0o[0-7_]\+\%([iuf]\%(8\|16\|32\|64\|128\|size\)\)\=\>"
 syntax match gossamerNumber "\<\d\+\%(\.\d\+\)\=\%([eE][+-]\=\d\+\)\=\%([iuf]\%(8\|16\|32\|64\|128\|size\)\)\=\>"
 
-syntax region gossamerString start=+b\=r\?#*"+ end=+"#*+ contains=gossamerEscape
+syntax region gossamerString start=+b\=r\z(#*\)"+ end=+"\z1+ contains=gossamerEscape
 syntax region gossamerString start=+b\?"+ skip=+\\\\\|\\"+ end=+"+ contains=gossamerEscape
+" Multi-line strings are their own item: same-name regions merge into one
+" syntax item, and the single-quote start/end patterns would swallow the
+" """ delimiters. Defined after the single-quote regions so it wins at the
+" shared quote column. The body starts on the line after the opening """
+" (only whitespace may follow it) and runs to the closing """.
+syntax region gossamerMultilineString start=+"""\s*$+ skip=+\\\\\|\\"+ end=+"""+ contains=gossamerEscape
+" Long multi-line strings outrun the default backwards resync window.
+syntax sync minlines=200
 syntax match gossamerEscape display contained "\\\(x\x\{2}\|u{\x\+}\|.\)"
 
 syntax match gossamerChar +b\?'\\\?.'+
@@ -77,6 +85,7 @@ highlight default link gossamerBoolean Boolean
 highlight default link gossamerConstant Constant
 highlight default link gossamerNumber Number
 highlight default link gossamerString String
+highlight default link gossamerMultilineString String
 highlight default link gossamerEscape SpecialChar
 highlight default link gossamerChar Character
 highlight default link gossamerComment Comment
