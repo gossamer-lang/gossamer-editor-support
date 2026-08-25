@@ -10,6 +10,7 @@
 (float_literal) @number
 (boolean_literal) @constant.builtin.boolean
 (string_literal) @string
+(multiline_string_literal) @string
 (raw_string_literal) @string
 (raw_byte_string_literal) @string
 (byte_string_literal) @string
@@ -24,11 +25,17 @@
 
 ; Built-in generic/container types
 ((type_identifier) @type.builtin
-  (#match? @type.builtin "^(Arc|Array|BTreeMap|BTreeSet|Box|Fn|FnMut|FnOnce|HashMap|HashSet|JoinHandle|Mutex|Option|Rc|Receiver|Result|RwLock|Sender|String|Vec|Weak)$"))
+  (#match? @type.builtin "^(Arc|BTreeMap|BTreeSet|Box|Deque|DynValue|Fn|I64Vec|Iterator|Map|MaxHeap|MinHeap|Mutex|Never|Option|Queue|Range|Rc|Receiver|Result|RwLock|Sender|Set|Stack|String|U8Vec|Unit|Vec|Weak)$"))
 
-; Built-in constructors (Some/None/Ok/Err live as paths/identifiers, match by name)
+; Built-in constructors (Some/None/Ok/Err live as paths, match by name)
 ((identifier) @constant.builtin
   (#match? @constant.builtin "^(Some|None|Ok|Err)$"))
+((type_identifier) @constant.builtin
+  (#match? @constant.builtin "^(Some|None|Ok|Err)$"))
+
+; Prelude functions no module exports
+((identifier) @function.builtin
+  (#match? @function.builtin "^(assert|assert_eq|spawn|channel)$"))
 
 ; Functions
 (function_item name: (identifier) @function)
@@ -93,7 +100,7 @@
 "|>" @operator.special
 
 ; Punctuation
-[ "(" ")" "[" "]" "{" "}" ] @punctuation.bracket
+[ "(" ")" "[" "]" "{" "}" "#[" "#{" ] @punctuation.bracket
 [ "," ";" ":" "." ] @punctuation.delimiter
 
 ; Keywords
@@ -104,7 +111,6 @@
   "comptime"
   "const"
   "crate"
-  "dyn"
   "enum"
   "extern"
   "fn"
@@ -141,6 +147,7 @@
   "select"
   "go"
   "arena"
+  "cohort"
   "continue"
 ] @keyword.control
 
@@ -149,3 +156,14 @@
 
 ; Attributes
 (attribute_item) @attribute
+(attribute (identifier) @attribute)
+
+; Named and defaulted arguments
+(named_argument name: (identifier) @variable.parameter)
+(cohort_header name: (identifier) @variable.parameter)
+
+; A bare map key reads as a key, not a variable
+(map_entry key: (identifier) @variable.field)
+
+; Associated-type equality constraint: `T: Iterator<Item = i64>`
+(associated_type_binding name: (type_identifier) @type)

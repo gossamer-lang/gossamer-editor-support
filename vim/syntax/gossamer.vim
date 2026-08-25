@@ -14,21 +14,26 @@ syntax case match
 " into following lines.
 setlocal synmaxcol=0
 
-syntax keyword gossamerKeyword as async await comptime const crate dyn enum extern fn
+syntax keyword gossamerKeyword as async await comptime const crate enum extern fn
 syntax keyword gossamerKeyword impl let mod mut package pub self Self static
 syntax keyword gossamerKeyword struct super trait type unsafe use where yield
 syntax keyword gossamerControl if else match loop while for in break continue
 syntax keyword gossamerControl return yield defer select go
-" `arena` is contextual: a keyword only when it opens a block.
+" `arena` and `cohort` are contextual: keywords only when they open a block.
 syntax match gossamerControl "\<arena\>\ze\s*{"
+syntax match gossamerControl "\<cohort\>\ze\s*[({]"
 
-syntax keyword gossamerType bool char str
+syntax keyword gossamerType bool char str String Never Unit
 syntax keyword gossamerType i8 i16 i32 i64 i128 isize
 syntax keyword gossamerType u8 u16 u32 u64 u128 usize
 syntax keyword gossamerType f32 f64
-syntax keyword gossamerType Arc Array BTreeMap BTreeSet Box Fn FnMut FnOnce
-syntax keyword gossamerType HashMap HashSet JoinHandle Mutex Option Rc Receiver
-syntax keyword gossamerType Result RwLock Sender String Vec Weak
+syntax keyword gossamerType Arc BTreeMap BTreeSet Box Deque DynValue Fn
+syntax keyword gossamerType I64Vec Iterator Map MaxHeap MinHeap Mutex Option
+syntax keyword gossamerType Queue Range Rc Receiver Result RwLock Sender Set
+syntax keyword gossamerType Stack U8Vec Vec Weak
+
+" Prelude functions no module exports.
+syntax keyword gossamerBuiltin assert assert_eq spawn channel
 
 syntax keyword gossamerBoolean true false
 syntax keyword gossamerConstant None Some Ok Err
@@ -71,7 +76,9 @@ syntax match gossamerOperator "=>"
 syntax match gossamerOperator "::"
 syntax match gossamerOperator "#"
 
-syntax match gossamerAttribute "^\s*\zs#!\?\[.\{-}\]"
+" An attribute names a path, which is what separates it from a `#[1, 2]`
+" Vec literal that happens to open a line.
+syntax match gossamerAttribute "^\s*\zs#!\?\[[A-Za-z_].\{-}\]"
 syntax match gossamerMacro "\<[a-zA-Z_][a-zA-Z0-9_]*!"
 
 syntax match gossamerFunction "\<[a-zA-Z_][a-zA-Z0-9_]*\ze\s*("
@@ -93,6 +100,7 @@ highlight default link gossamerBlockComment Comment
 highlight default link gossamerTodo Todo
 highlight default link gossamerOperator Operator
 highlight default link gossamerAttribute PreProc
+highlight default link gossamerBuiltin Function
 highlight default link gossamerMacro Macro
 highlight default link gossamerFunction Function
 

@@ -16,8 +16,8 @@ Add the parser via the configured parser table. Example with
     local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
     parser_config.gossamer = {
       install_info = {
-        url = "https://github.com/gossamer-lang/gossamer-site",
-        location = "editors/tree-sitter-gossamer",
+        url = "https://github.com/gossamer-lang/gossamer-editor-support",
+        location = "tree-sitter-gossamer",
         files = { "src/parser.c", "src/scanner.c" },
         branch = "main",
       },
@@ -44,7 +44,7 @@ automatically.
 If you only want syntax highlighting (no treesitter), the vim files
 in `../vim/` work in neovim too. Drop them under `~/.config/nvim/` or
 add the repo as a runtimepath via your plugin manager pointing to
-`editors/vim`.
+`vim`.
 
 ## LSP
 

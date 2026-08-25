@@ -13,13 +13,13 @@ npm install -g @vscode/vsce
 vsce package
 
 # Then install the produced .vsix
-code --install-extension gossamer-0.1.0.vsix
+code --install-extension gossamer-0.2.0.vsix
 ```
 
 Or symlink the directory into your extensions folder for live editing:
 
 ```bash
-ln -s "$PWD" ~/.vscode/extensions/gossamer-lang.gossamer-0.1.0
+ln -s "$PWD" ~/.vscode/extensions/gossamer-lang.gossamer-0.2.0
 ```
 
 Open any `.gos` file to confirm highlighting.
@@ -31,9 +31,12 @@ Open any `.gos` file to confirm highlighting.
 - Keywords, primitive types, common stdlib types, literals (`true`, `false`,
   `None`, `Some`, `Ok`, `Err`)
 - Numeric literals (decimal, hex, binary, octal) with optional type suffix
-- String and byte-string literals, raw strings, char literals
+- String and byte-string literals, raw strings, char literals, and the
+  triple-quoted `""" ... """` form
+- Collection literals: `#[..]` (Vec), `#{..}` (Set), `{k: v}` (Map)
 - The forward-pipe operator `|>`
-- Attributes (`#[...]`, `#![...]`)
+- Attributes (`#[...]`, `#![...]`), which are distinguished from a
+  `#[..]` Vec literal by sitting at the start of a line
 - Function-call detection (identifier-before-paren)
 
 ## LSP

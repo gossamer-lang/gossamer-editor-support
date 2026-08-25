@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/gossamer-lang/gossamer-site.git"
+    "url": "https://github.com/gossamer-lang/gossamer-editor-support.git"
   },
   "engines": {
     "vscode": "^1.75.0"

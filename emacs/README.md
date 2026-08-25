@@ -15,7 +15,7 @@ editing and highlighting. Override the command with
 ## Install (manual)
 
 ```elisp
-(add-to-list 'load-path "/path/to/gossamer-site/editors/emacs")
+(add-to-list 'load-path "/path/to/gossamer-editor-support/emacs")
 (require 'gossamer-mode)
 ```
 
@@ -24,8 +24,8 @@ editing and highlighting. Override the command with
 ```elisp
 (use-package gossamer-mode
   :straight (:host github
-             :repo "gossamer-lang/gossamer-site"
-             :files ("editors/emacs/gossamer-mode.el"))
+             :repo "gossamer-lang/gossamer-editor-support"
+             :files ("emacs/gossamer-mode.el"))
   :mode "\\.gos\\'")
 ```
 

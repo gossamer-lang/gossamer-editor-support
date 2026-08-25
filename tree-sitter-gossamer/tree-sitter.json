@@ -20,7 +20,7 @@
       { "name": "Gossamer language team" }
     ],
     "links": {
-      "repository": "https://github.com/gossamer-lang/gossamer-site"
+      "repository": "https://github.com/gossamer-lang/gossamer-editor-support"
     }
   },
   "bindings": {

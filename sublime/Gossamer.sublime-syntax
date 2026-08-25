@@ -47,7 +47,8 @@ contexts:
       pop: true
 
   attributes:
-    - match: '^\s*#!?\['
+    # An attribute names a path; `#[1, 2]` opening a line is a Vec literal.
+    - match: '^\s*#!?\[(?=[A-Za-z_])'
       scope: punctuation.definition.attribute.gossamer
       push:
         - meta_scope: meta.attribute.gossamer
@@ -57,6 +58,13 @@ contexts:
         - include: identifiers
 
   strings:
+    - match: '"""'
+      push:
+        - meta_scope: string.quoted.triple.gossamer
+        - match: '"""'
+          pop: true
+        - match: '\\(?:[nrt0\\"'']|x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\})'
+          scope: constant.character.escape.gossamer
     - match: 'b?r(#*)"'
       push:
         - meta_scope: string.quoted.double.raw.gossamer
@@ -85,20 +93,22 @@ contexts:
       scope: constant.numeric.decimal.gossamer
 
   keywords:
-    # `arena` is contextual: a keyword only when it opens a block.
+    # `arena` and `cohort` are contextual: keywords only when they open a block.
     - match: '\barena\b(?=\s*\{)'
+      scope: keyword.control.gossamer
+    - match: '\bcohort\b(?=\s*[({])'
       scope: keyword.control.gossamer
     - match: '\b(if|else|match|loop|while|for|in|break|continue|return|yield|defer|select|go)\b'
       scope: keyword.control.gossamer
-    - match: '\b(as|async|await|comptime|const|crate|dyn|enum|extern|fn|impl|let|mod|mut|package|pub|self|Self|static|struct|super|trait|type|unsafe|use|where|yield)\b'
+    - match: '\b(as|async|await|comptime|const|crate|enum|extern|fn|impl|let|mod|mut|package|pub|self|Self|static|struct|super|trait|type|unsafe|use|where|yield)\b'
       scope: keyword.other.gossamer
     - match: '\b{{ident}}!'
       scope: entity.name.function.macro.gossamer
 
   types:
-    - match: '\b(bool|char|str|i8|i16|i32|i64|i128|isize|u8|u16|u32|u64|u128|usize|f32|f64)\b'
+    - match: '\b(bool|char|str|String|Never|Unit|i8|i16|i32|i64|i128|isize|u8|u16|u32|u64|u128|usize|f32|f64)\b'
       scope: support.type.primitive.gossamer
-    - match: '\b(Arc|Array|BTreeMap|BTreeSet|Box|Fn|FnMut|FnOnce|HashMap|HashSet|JoinHandle|Mutex|Option|Rc|Receiver|Result|RwLock|Sender|String|Vec|Weak)\b'
+    - match: '\b(Arc|BTreeMap|BTreeSet|Box|Deque|DynValue|Fn|I64Vec|Iterator|Map|MaxHeap|MinHeap|Mutex|Option|Queue|Range|Rc|Receiver|Result|RwLock|Sender|Set|Stack|U8Vec|Vec|Weak)\b'
       scope: support.type.gossamer
     - match: '\b[A-Z][A-Za-z0-9_]*\b'
       scope: entity.name.type.gossamer
@@ -116,6 +126,8 @@ contexts:
       scope: keyword.operator.gossamer
 
   functions:
+    - match: '\b(assert_eq|assert|spawn|channel)\b(?=\s*\()'
+      scope: support.function.builtin.gossamer
     - match: '\b({{ident}})\s*(?=\()'
       captures:
         1: entity.name.function.gossamer

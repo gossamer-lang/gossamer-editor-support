@@ -28,19 +28,28 @@ npx tree-sitter parse path/to/file.gos
 
 ## Status
 
-Tracks Gossamer 0.32.0: `arena { }` blocks, `comptime` blocks and
-functions, `let ... else`, `if let` / `while let` chains, labels, open
-ranges, slice patterns, both closure forms (`|x| body` and
+Tracks Gossamer 0.55.6: collection literals (`#[..]` Vec, `#{..}` Set,
+`{k: v}` Map), triple-quoted `""" ... """` strings, `cohort { }` and
+`arena { }` blocks, `comptime` blocks and functions, `let ... else`,
+`if let` / `while let` chains, labels, open ranges, slice patterns,
+tuple index access (`t.0.1`), both closure forms (`|x| body` and
 `fn(x) { }`), the built-in macro forms, `?` propagation, `as` casts,
 turbofish calls (`from_json::<T>(...)`), const-generic literal
-arguments, closure trait types (`Fn(i64) -> i64`), braced named-struct
-literals with keyed and positional fields, variant-level attributes
-(`#[default]`), and UAX #31 Unicode identifiers. Nested block comments
-are lexed by the external scanner in `src/scanner.c` (compile it
-alongside `src/parser.c`).
+arguments, closure trait types (`Fn(i64) -> i64`), associated types and
+their equality constraints (`T: Iterator<Item = i64>`), parameter
+defaults and named arguments, braced named-struct literals with keyed
+and `..base` fields, variant-level attributes (`#[default]`), and
+UAX #31 Unicode identifiers.
+
+Delimited lists take a newline wherever a comma would go, so struct
+fields, enum variants, arguments, and match arms parse unseparated
+across lines. `src/scanner.c` is the external scanner: it lexes nesting
+block comments, triple-quoted strings, and the zero-width separator
+that a line break stands for. Compile it alongside `src/parser.c`.
 
 Every example and feature-test file in the Gossamer repository parses
-without ERROR nodes; `test/corpus/` locks the tree shapes
+without ERROR nodes, except the diagnostics fixture that is deliberately
+malformed; `test/corpus/` locks the tree shapes
 (`npx tree-sitter test`). The grammar still favors highlighting over
 full fidelity with the upstream `gos` parser, so a malformed program
 may produce local ERROR nodes that don't impact highlighting elsewhere

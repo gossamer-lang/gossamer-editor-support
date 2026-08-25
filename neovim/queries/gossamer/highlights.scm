@@ -1,4 +1,4 @@
-; This file mirrors editors/tree-sitter-gossamer/queries/highlights.scm.
+; This file mirrors tree-sitter-gossamer/queries/highlights.scm.
 ; It is placed here so neovim's runtimepath query loader can find it
 ; when the tree-sitter parser is registered as `gossamer`.
 
@@ -11,6 +11,7 @@
 (float_literal) @number
 (boolean_literal) @boolean
 (string_literal) @string
+(multiline_string_literal) @string
 (raw_string_literal) @string
 (raw_byte_string_literal) @string
 (byte_string_literal) @string
@@ -20,11 +21,13 @@
 
 ((identifier) @constant.builtin
   (#match? @constant.builtin "^(Some|None|Ok|Err)$"))
+((type_identifier) @constant.builtin
+  (#match? @constant.builtin "^(Some|None|Ok|Err)$"))
 
 (primitive_type) @type.builtin
 
 ((type_identifier) @type.builtin
-  (#match? @type.builtin "^(Arc|Array|BTreeMap|BTreeSet|Box|Fn|FnMut|FnOnce|HashMap|HashSet|JoinHandle|Mutex|Option|Rc|Receiver|Result|RwLock|Sender|String|Vec|Weak)$"))
+  (#match? @type.builtin "^(Arc|BTreeMap|BTreeSet|Box|Deque|DynValue|Fn|I64Vec|Iterator|Map|MaxHeap|MinHeap|Mutex|Never|Option|Queue|Range|Rc|Receiver|Result|RwLock|Sender|Set|Stack|String|U8Vec|Unit|Vec|Weak)$"))
 
 (type_identifier) @type
 
@@ -45,7 +48,7 @@
 ; Only tokens the grammar actually defines may appear here; an unknown
 ; token makes the whole query fail to load.
 [
-  "as" "async" "await" "comptime" "const" "crate" "dyn" "enum"
+  "as" "async" "await" "comptime" "const" "crate" "enum"
   "extern" "fn" "impl" "let" "mod" "mut" "package" "pub" "self"
   "Self" "static" "struct" "super" "trait" "type" "unsafe" "use"
   "where" "yield"
@@ -53,10 +56,16 @@
 
 [
   "if" "else" "match" "loop" "while" "for" "in" "break"
-  "continue" "return" "defer" "select" "go" "arena"
+  "continue" "return" "defer" "select" "go" "arena" "cohort"
 ] @keyword
 
 (reserved_keyword) @keyword
 (continue_expression) @keyword
 
 (attribute_item) @attribute
+(attribute (identifier) @attribute)
+
+(named_argument name: (identifier) @parameter)
+(cohort_header name: (identifier) @parameter)
+(map_entry key: (identifier) @field)
+(associated_type_binding name: (type_identifier) @type)

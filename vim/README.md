@@ -6,7 +6,7 @@ settings for `.gos` files.
 ## Install (vim-plug)
 
 ```vim
-Plug 'gossamer-lang/gossamer-site', { 'rtp': 'editors/vim' }
+Plug 'gossamer-lang/gossamer-editor-support', { 'rtp': 'vim' }
 ```
 
 ## Install (manual)

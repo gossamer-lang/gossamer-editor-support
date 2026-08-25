@@ -19,4 +19,4 @@ args = ["lsp"]
 
 [[grammar]]
 name = "gossamer"
-source = { git = "https://github.com/gossamer-lang/gossamer-site", rev = "main", subpath = "editors/tree-sitter-gossamer" }
+source = { git = "https://github.com/gossamer-lang/gossamer-editor-support", rev = "main", subpath = "tree-sitter-gossamer" }

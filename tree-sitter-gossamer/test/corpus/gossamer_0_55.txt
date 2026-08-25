@@ -1,0 +1,309 @@
+================================================================================
+collection literals
+================================================================================
+
+fn main() {
+    let v = #[1, 2, 3]
+    let s = #{1, 2}
+    let m = {"one": 1}
+    let a = [1, 2, 3]
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (vec_literal
+          (literal
+            (integer_literal))
+          (literal
+            (integer_literal))
+          (literal
+            (integer_literal))))
+      (let_declaration
+        (identifier)
+        (set_literal
+          (literal
+            (integer_literal))
+          (literal
+            (integer_literal))))
+      (let_declaration
+        (identifier)
+        (map_literal
+          (map_entry
+            (literal
+              (string_literal))
+            (literal
+              (integer_literal)))))
+      (let_declaration
+        (identifier)
+        (array_expression
+          (literal
+            (integer_literal))
+          (literal
+            (integer_literal))
+          (literal
+            (integer_literal)))))))
+
+================================================================================
+triple-quoted string
+================================================================================
+
+fn main() {
+    let q = """
+    SELECT 1
+    """
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (literal
+          (multiline_string_literal))))))
+
+================================================================================
+cohort block
+================================================================================
+
+fn main() {
+    cohort {
+        let a = spawn(work)
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (cohort_block
+        (block
+          (let_declaration
+            (identifier)
+            (call_expression
+              (identifier)
+              (identifier))))))))
+
+================================================================================
+newline-separated fields and variants
+================================================================================
+
+struct Point {
+    x: f64
+    y: f64
+}
+
+enum Shape {
+    Circle(f64)
+    Nil
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_item
+    (type_identifier)
+    (field_declaration
+      (identifier)
+      (primitive_type))
+    (field_declaration
+      (identifier)
+      (primitive_type)))
+  (enum_item
+    (type_identifier)
+    (enum_variant
+      (type_identifier)
+      (tuple_field_declaration
+        (primitive_type)))
+    (enum_variant
+      (type_identifier))))
+
+================================================================================
+tuple index access
+================================================================================
+
+fn main() {
+    let a = t.0
+    let b = t.0.1
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (field_expression
+          (identifier)))
+      (let_declaration
+        (identifier)
+        (field_expression
+          (field_expression
+            (identifier)))))))
+
+================================================================================
+associated type projection
+================================================================================
+
+trait Source {
+    type Item
+    fn take(&self) -> Self::Item
+}
+
+fn sum_of<T: Source<Item = i64>>(source: &T) -> T::Item { 0 }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (trait_item
+    (type_identifier)
+    (declaration_block
+      (associated_type_item
+        (identifier))
+      (function_item
+        (identifier)
+        (parameters)
+        (type_identifier)
+        (type_identifier))))
+  (function_item
+    (identifier)
+    (type_parameters
+      (identifier)
+      (generic_type
+        (type_identifier)
+        (associated_type_binding
+          (type_identifier)
+          (primitive_type))))
+    (parameters
+      (parameter
+        (identifier)
+        (reference_type
+          (type_identifier))))
+    (type_identifier)
+    (type_identifier)
+    (block
+      (literal
+        (integer_literal)))))
+
+================================================================================
+default and named arguments
+================================================================================
+
+fn volume(width: i64, height: i64 = 2) -> i64 { width * height }
+
+fn main() {
+    let a = volume(width = 2, height = 3)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (primitive_type))
+      (parameter
+        (identifier)
+        (primitive_type)
+        (literal
+          (integer_literal))))
+    (primitive_type)
+    (block
+      (binary_expression
+        (identifier)
+        (identifier))))
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (call_expression
+          (identifier)
+          (named_argument
+            (identifier)
+            (literal
+              (integer_literal)))
+          (named_argument
+            (identifier)
+            (literal
+              (integer_literal))))))))
+
+================================================================================
+newline-separated match arms
+================================================================================
+
+fn main() {
+    match x {
+        99 => break
+        op => step(op)
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (match_expression
+        (identifier)
+        (match_arm
+          (literal
+            (integer_literal))
+          (break_expression))
+        (match_arm
+          (identifier)
+          (call_expression
+            (identifier)
+            (identifier)))))))
+
+================================================================================
+multi-line method chain
+================================================================================
+
+fn main() {
+    let r = build(200, "ok")
+        .with_header("x-a", "1")
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (method_call_expression
+          (call_expression
+            (identifier)
+            (literal
+              (integer_literal))
+            (literal
+              (string_literal)))
+          (identifier)
+          (literal
+            (string_literal))
+          (literal
+            (string_literal)))))))

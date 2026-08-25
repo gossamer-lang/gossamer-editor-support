@@ -3,7 +3,7 @@
 ;; Author: Gossamer contributors
 ;; Version: 0.2.0
 ;; Keywords: languages
-;; URL: https://github.com/gossamer-lang/gossamer-site
+;; URL: https://github.com/gossamer-lang/gossamer-editor-support
 
 ;;; Commentary:
 
@@ -29,7 +29,7 @@
   "Syntax table for `gossamer-mode'.")
 
 (defconst gossamer-keywords
-  '("as" "async" "await" "comptime" "const" "crate" "dyn" "enum" "extern" "fn"
+  '("as" "async" "await" "comptime" "const" "crate" "enum" "extern" "fn"
     "impl" "let" "mod" "mut" "package" "pub" "self" "Self" "static"
     "struct" "super" "trait" "type" "unsafe" "use" "where" "yield"))
 
@@ -38,33 +38,54 @@
     "return" "yield" "defer" "select" "go"))
 
 (defconst gossamer-types
-  '("bool" "char" "str"
+  '("bool" "char" "str" "String" "Never" "Unit"
     "i8" "i16" "i32" "i64" "i128" "isize"
     "u8" "u16" "u32" "u64" "u128" "usize"
     "f32" "f64"
-    "Arc" "Array" "BTreeMap" "BTreeSet" "Box" "Fn" "FnMut" "FnOnce"
-    "HashMap" "HashSet" "JoinHandle" "Mutex" "Option" "Rc" "Receiver"
-    "Result" "RwLock" "Sender" "String" "Vec" "Weak"))
+    "Arc" "BTreeMap" "BTreeSet" "Box" "Deque" "DynValue" "Fn" "I64Vec"
+    "Iterator" "Map" "MaxHeap" "MinHeap" "Mutex" "Option" "Queue" "Range"
+    "Rc" "Receiver" "Result" "RwLock" "Sender" "Set" "Stack" "U8Vec"
+    "Vec" "Weak"))
+
+(defconst gossamer-builtins
+  '("assert" "assert_eq" "spawn" "channel")
+  "Prelude functions no module exports.")
 
 (defconst gossamer-constants
   '("true" "false" "None" "Some" "Ok" "Err"))
 
 (defconst gossamer-font-lock-keywords
-  `(;; `arena` is contextual: a keyword only when it opens a block.
+  `(;; `arena` and `cohort` are contextual: keywords only when they open a block.
     ("\\_<\\(arena\\)\\_>\\s-*{" 1 font-lock-keyword-face)
+    ("\\_<\\(cohort\\)\\_>\\s-*[({]" 1 font-lock-keyword-face)
     (,(regexp-opt gossamer-keywords 'symbols) . font-lock-keyword-face)
     (,(regexp-opt gossamer-control 'symbols) . font-lock-keyword-face)
     (,(regexp-opt gossamer-types 'symbols) . font-lock-type-face)
     (,(regexp-opt gossamer-constants 'symbols) . font-lock-constant-face)
+    (,(regexp-opt gossamer-builtins 'symbols) . font-lock-builtin-face)
     ("\\<\\(0x[0-9a-fA-F_]+\\|0b[01_]+\\|0o[0-7_]+\\|[0-9][0-9_]*\\(?:\\.[0-9_]+\\)?\\(?:[eE][+-]?[0-9_]+\\)?\\)\\(?:[iuf]\\(?:8\\|16\\|32\\|64\\|128\\|size\\)\\)?\\>"
      . font-lock-constant-face)
     ("|>" . font-lock-builtin-face)
     ("\\<fn\\s-+\\([a-zA-Z_][a-zA-Z0-9_]*\\)" 1 font-lock-function-name-face)
     ("\\<\\([a-zA-Z_][a-zA-Z0-9_]*\\)\\s-*(" 1 font-lock-function-name-face)
     ("\\<\\([A-Z][a-zA-Z0-9_]*\\)\\>" 1 font-lock-type-face)
-    ("^\\s-*#!?\\[[^]]*\\]" . font-lock-preprocessor-face)
+    ("^\\s-*#!?\\[[A-Za-z_][^]]*\\]" . font-lock-preprocessor-face)
     ("#" . font-lock-builtin-face)
     ("\\<[a-zA-Z_][a-zA-Z0-9_]*!" . font-lock-preprocessor-face)))
+
+(defun gossamer-syntax-propertize (start end)
+  "Give each `\"\"\"` between START and END a generic string fence.
+Fences alternate, so the parser state at START decides whether the first
+delimiter found opens or closes a triple-quoted literal."
+  (goto-char start)
+  (let ((opening (not (nth 3 (syntax-ppss start)))))
+    (while (re-search-forward "\"\"\"" end t)
+      (if opening
+          (put-text-property (match-beginning 0) (1+ (match-beginning 0))
+                             'syntax-table (string-to-syntax "|"))
+        (put-text-property (1- (match-end 0)) (match-end 0)
+                           'syntax-table (string-to-syntax "|")))
+      (setq opening (not opening)))))
 
 (defcustom gossamer-indent-offset 4
   "Indentation offset for `gossamer-mode'."
@@ -106,6 +127,7 @@
   "Major mode for editing Gossamer source files."
   :syntax-table gossamer-mode-syntax-table
   (setq-local font-lock-defaults '(gossamer-font-lock-keywords))
+  (setq-local syntax-propertize-function #'gossamer-syntax-propertize)
   (setq-local comment-start "// ")
   (setq-local comment-end "")
   (setq-local comment-start-skip "//+\\s-*")

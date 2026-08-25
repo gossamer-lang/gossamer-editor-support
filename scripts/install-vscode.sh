@@ -14,7 +14,8 @@ case "$(uname -s)" in
     *) echo "unsupported platform: $(uname -s)" >&2; exit 1 ;;
 esac
 
-TARGET="$EXT_DIR/gossamer-lang.gossamer-0.1.0"
+VERSION="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$SRC_DIR/package.json" | head -1)"
+TARGET="$EXT_DIR/gossamer-lang.gossamer-$VERSION"
 
 mkdir -p "$EXT_DIR"
 

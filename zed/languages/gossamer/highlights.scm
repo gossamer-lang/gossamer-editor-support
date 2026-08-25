@@ -1,4 +1,4 @@
-; Mirrors editors/tree-sitter-gossamer/queries/highlights.scm but tuned
+; Mirrors tree-sitter-gossamer/queries/highlights.scm but tuned
 ; for Zed's highlight name conventions.
 
 (line_comment) @comment
@@ -8,6 +8,7 @@
 (float_literal) @number
 (boolean_literal) @boolean
 (string_literal) @string
+(multiline_string_literal) @string
 (raw_string_literal) @string
 (raw_byte_string_literal) @string
 (byte_string_literal) @string
@@ -16,6 +17,8 @@
 (label) @label
 
 ((identifier) @constant
+  (#match? @constant "^(Some|None|Ok|Err)$"))
+((type_identifier) @constant
   (#match? @constant "^(Some|None|Ok|Err)$"))
 
 (primitive_type) @type
@@ -46,6 +49,8 @@
   "@" "?" "|>"
 ] @operator
 
+[ "#[" "#{" ] @punctuation.bracket
+
 (reference_type "&" @keyword)
 (reference_pattern "&" @keyword)
 (reference_expression "&" @keyword)
@@ -56,15 +61,21 @@
 ; Only tokens the grammar actually defines may appear here; an unknown
 ; token makes the whole query fail to load.
 [
-  "as" "async" "await" "comptime" "const" "crate" "dyn" "enum"
+  "as" "async" "await" "comptime" "const" "crate" "enum"
   "extern" "fn" "impl" "let" "mod" "mut" "package" "pub" "self"
   "Self" "static" "struct" "super" "trait" "type" "unsafe" "use"
   "where" "yield"
   "if" "else" "match" "loop" "while" "for" "in" "break"
-  "continue" "return" "defer" "select" "go" "arena"
+  "continue" "return" "defer" "select" "go" "arena" "cohort"
 ] @keyword
 
 (reserved_keyword) @keyword
 (continue_expression) @keyword
 
 (attribute_item) @attribute
+(attribute (identifier) @attribute)
+
+(named_argument name: (identifier) @variable.parameter)
+(cohort_header name: (identifier) @variable.parameter)
+(map_entry key: (identifier) @property)
+(associated_type_binding name: (type_identifier) @type)

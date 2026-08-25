@@ -18,22 +18,26 @@ editor supports it) tree-sitter queries.
 | **Sublime Text**           | `sublime/`                 | `.sublime-syntax`     |
 | **Zed**                    | `zed/`                     | extension + grammar   |
 
-All integrations track the Gossamer 0.32.0 surface and cover at
+All integrations track the Gossamer 0.55.6 surface and cover at
 minimum:
 
 - `.gos` file detection
 - Comments (`//` and nesting `/* ... */`)
 - Keywords, including `comptime`, goroutine controls, and the
-  contextual `arena { }` block
+  contextual `arena { }` and `cohort { }` blocks
 - Primitive types and common stdlib types
 - Numeric literals (decimal, hex, binary, octal) with type suffixes
-- String, byte-string, raw-string, raw-byte-string, char, and byte literals
+- String, byte-string, raw-string, raw-byte-string, char, and byte
+  literals, and the triple-quoted `""" ... """` form
 - The forward-pipe operator `|>`
 - Labels, open ranges, range patterns, and slice patterns
-- Braced named-struct literals with keyed, positional, mixed, and
-  `..base` fields
+- Collection literals: `#[..]` (Vec), `#{..}` (Set), `{k: v}` (Map),
+  and `[..]` (fixed array)
+- Braced named-struct literals with keyed and `..base` fields
 - Attributes (`#[...]`, `#![...]`)
 - Function-call detection (identifier-before-paren)
+- Newline-separated delimited lists, which Gossamer accepts wherever a
+  comma would go
 
 LSP wiring is configured for VSCode, Helix, Neovim, Zed, Emacs, and
 Sublime Text. Each client launches `gos lsp` (the LSP subcommand of

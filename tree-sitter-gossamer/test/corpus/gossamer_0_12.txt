@@ -63,7 +63,7 @@ fn main() {
     (block
       (let_declaration
         (tuple_struct_pattern
-          (identifier)
+          (type_identifier)
           (identifier))
         (method_call_expression
           (identifier)
@@ -96,7 +96,7 @@ fn main() {
       (if_expression
         (let_condition
           (tuple_struct_pattern
-            (identifier)
+            (type_identifier)
             (identifier))
           (identifier))
         (block
@@ -106,7 +106,7 @@ fn main() {
       (while_expression
         (let_condition
           (tuple_struct_pattern
-            (identifier)
+            (type_identifier)
             (identifier))
           (method_call_expression
             (identifier)
@@ -257,7 +257,7 @@ fn run(path: &String) -> Result<(), errors::Error> {
       (type_identifier)
       (tuple_type)
       (identifier)
-      (identifier))
+      (type_identifier))
     (block
       (let_declaration
         (identifier)
@@ -274,7 +274,7 @@ fn run(path: &String) -> Result<(), errors::Error> {
             (identifier))
           (primitive_type)))
       (call_expression
-        (identifier)
+        (type_identifier)
         (tuple_expression)))))
 
 ================================================================================
@@ -433,7 +433,9 @@ enum Token {
 --------------------------------------------------------------------------------
 
 (source_file
-  (attribute_item)
+  (attribute_item
+    (attribute
+      (identifier)))
   (enum_item
     (type_identifier)
     (enum_variant
@@ -441,7 +443,9 @@ enum Token {
       (tuple_field_declaration
         (primitive_type)))
     (enum_variant
-      (attribute_item)
+      (attribute_item
+        (attribute
+          (identifier)))
       (type_identifier))))
 
 ================================================================================
