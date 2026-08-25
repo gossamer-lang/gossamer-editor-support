@@ -62,7 +62,8 @@
     ("\\<fn\\s-+\\([a-zA-Z_][a-zA-Z0-9_]*\\)" 1 font-lock-function-name-face)
     ("\\<\\([a-zA-Z_][a-zA-Z0-9_]*\\)\\s-*(" 1 font-lock-function-name-face)
     ("\\<\\([A-Z][a-zA-Z0-9_]*\\)\\>" 1 font-lock-type-face)
-    ("#!?\\[[^]]*\\]" . font-lock-preprocessor-face)
+    ("^\\s-*#!?\\[[^]]*\\]" . font-lock-preprocessor-face)
+    ("#" . font-lock-builtin-face)
     ("\\<[a-zA-Z_][a-zA-Z0-9_]*!" . font-lock-preprocessor-face)))
 
 (defcustom gossamer-indent-offset 4

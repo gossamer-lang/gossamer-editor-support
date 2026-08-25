@@ -65,7 +65,7 @@
       "patterns": [
         {
           "name": "meta.attribute.gossamer",
-          "begin": "#!?\\[",
+          "begin": "^\\s*#!?\\[",
           "end": "\\]",
           "patterns": [
             { "include": "#strings" },
@@ -155,7 +155,7 @@
         },
         {
           "name": "keyword.operator.gossamer",
-          "match": "[+\\-*/%<>!~|&^?.=@]"
+          "match": "[+\\-*/%<>!~|&^?.=@#]"
         }
       ]
     },

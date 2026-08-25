@@ -56,8 +56,9 @@ syntax match gossamerOperator "\(//\|/\*\)\@!/"
 syntax match gossamerOperator "->"
 syntax match gossamerOperator "=>"
 syntax match gossamerOperator "::"
+syntax match gossamerOperator "#"
 
-syntax match gossamerAttribute "#!\?\[.\{-}\]"
+syntax match gossamerAttribute "^\s*\zs#!\?\[.\{-}\]"
 syntax match gossamerMacro "\<[a-zA-Z_][a-zA-Z0-9_]*!"
 
 syntax match gossamerFunction "\<[a-zA-Z_][a-zA-Z0-9_]*\ze\s*("

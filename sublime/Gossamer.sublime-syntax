@@ -47,7 +47,7 @@ contexts:
       pop: true
 
   attributes:
-    - match: '#!?\['
+    - match: '^\s*#!?\['
       scope: punctuation.definition.attribute.gossamer
       push:
         - meta_scope: meta.attribute.gossamer
@@ -112,7 +112,7 @@ contexts:
       scope: keyword.operator.pipe.gossamer
     - match: '(==|!=|<=|>=|&&|\|\||<<=|>>=|<<|>>|\+=|-=|\*=|/=|%=|&=|\|=|\^=|->|=>|\.\.\.|\.\.=|\.\.|::)'
       scope: keyword.operator.gossamer
-    - match: '[+\-*/%<>!~|&^?.=@]'
+    - match: '[+\-*/%<>!~|&^?.=@#]'
       scope: keyword.operator.gossamer
 
   functions:
