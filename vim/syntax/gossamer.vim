@@ -41,7 +41,7 @@ syntax keyword gossamerConstant None Some Ok Err
 syntax match gossamerNumber "\<0x[0-9a-fA-F_]\+\%([iuf]\%(8\|16\|32\|64\|128\|size\)\)\=\>"
 syntax match gossamerNumber "\<0b[01_]\+\%([iuf]\%(8\|16\|32\|64\|128\|size\)\)\=\>"
 syntax match gossamerNumber "\<0o[0-7_]\+\%([iuf]\%(8\|16\|32\|64\|128\|size\)\)\=\>"
-syntax match gossamerNumber "\<\d\+\%(\.\d\+\)\=\%([eE][+-]\=\d\+\)\=\%([iuf]\%(8\|16\|32\|64\|128\|size\)\)\=\>"
+syntax match gossamerNumber "\<[0-9][0-9_]*\%(\.[0-9_]\+\)\=\%([eE][+-]\=[0-9_]\+\)\=\%([iuf]\%(8\|16\|32\|64\|128\|size\)\)\=\>"
 
 syntax region gossamerString start=+b\=r\z(#*\)"+ end=+"\z1+ contains=gossamerEscape
 syntax region gossamerString start=+b\?"+ skip=+\\\\\|\\"+ end=+"+ contains=gossamerEscape
