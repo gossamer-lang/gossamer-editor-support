@@ -18,18 +18,22 @@ editor supports it) tree-sitter queries.
 | **Sublime Text**           | `sublime/`                 | `.sublime-syntax`     |
 | **Zed**                    | `zed/`                     | extension + grammar   |
 
-All integrations track the Gossamer 0.55.6 surface and cover at
+All integrations track the Gossamer 0.61.0 surface and cover at
 minimum:
 
 - `.gos` file detection
 - Comments (`//` and nesting `/* ... */`)
-- Keywords, including `comptime`, goroutine controls, and the
-  contextual `arena { }` and `cohort { }` blocks
+- Keywords, with the block words (`arena`, `cohort`, `comptime`,
+  `defer`, `newtype`, `packed`, `select`) highlighted only where their
+  construct starts, since each is an ordinary name everywhere else
+- The compiler-known calls (`println`, `format`, `matches`, ...) and
+  prelude functions (`spawn`, `channel`, `assert`, ...)
 - Primitive types and common stdlib types
 - Numeric literals (decimal, hex, binary, octal) with type suffixes
 - String, byte-string, raw-string, raw-byte-string, char, and byte
   literals, and the triple-quoted `""" ... """` form
-- The forward-pipe operator `|>`
+- The forward-pipe operator `|>` and the wrapping operators `+%`, `-%`,
+  `*%` with their compound assignments
 - Labels, open ranges, range patterns, and slice patterns
 - Collection literals: `#[..]` (Vec), `#{..}` (Set), `{k: v}` (Map),
   and `[..]` (fixed array)

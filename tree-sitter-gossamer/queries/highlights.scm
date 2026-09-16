@@ -33,15 +33,15 @@
 ((type_identifier) @constant.builtin
   (#match? @constant.builtin "^(Some|None|Ok|Err)$"))
 
-; Prelude functions no module exports
-((identifier) @function.builtin
-  (#match? @function.builtin "^(assert|assert_eq|spawn|channel)$"))
-
 ; Functions
 (function_item name: (identifier) @function)
 (call_expression function: (identifier) @function)
 (generic_function function: (identifier) @function)
 (method_call_expression (identifier) @function.method)
+
+; Prelude functions no module exports, and the compiler-known calls
+((identifier) @function.builtin
+  (#match? @function.builtin "^(assert|assert_eq|spawn|channel|println|print|eprintln|eprint|format|panic|matches|todo|unimplemented|unreachable|dbg|codegen)$"))
 
 ; Built-in macros (`println!`, `matches!`, `regex!`, ...)
 (macro_invocation macro: (identifier) @function.macro)
@@ -60,6 +60,9 @@
   "+"
   "-"
   "*"
+  "+%"
+  "-%"
+  "*%"
   "/"
   "%"
   "&"
@@ -89,6 +92,9 @@
   "^="
   "<<="
   ">>="
+  "+%="
+  "-%="
+  "*%="
   ".."
   "..="
   "::"
@@ -118,7 +124,9 @@
   "let"
   "mod"
   "mut"
+  "newtype"
   "package"
+  "packed"
   "pub"
   "self"
   "Self"
@@ -145,7 +153,7 @@
   "return"
   "defer"
   "select"
-  "go"
+  "default"
   "arena"
   "cohort"
   "continue"

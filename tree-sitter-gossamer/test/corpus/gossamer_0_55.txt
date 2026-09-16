@@ -175,7 +175,7 @@ fn sum_of<T: Source<Item = i64>>(source: &T) -> T::Item { 0 }
     (type_identifier)
     (declaration_block
       (associated_type_item
-        (identifier))
+        (type_identifier))
       (function_item
         (identifier)
         (parameters)

@@ -37,13 +37,13 @@
 (macro_invocation macro: (identifier) @function.special)
 
 [
-  "+" "-" "*" "/" "%"
+  "+" "-" "*" "/" "%" "+%" "-%" "*%"
   "|" "^" "!"
   "<" ">" "=" "==" "!=" "<=" ">="
   "&&" "||"
   "<<" ">>"
   "->" "=>"
-  "+=" "-=" "*=" "/=" "%=" "&=" "|=" "^=" "<<=" ">>="
+  "+=" "-=" "*=" "/=" "%=" "&=" "|=" "^=" "<<=" ">>=" "+%=" "-%=" "*%="
   ".." "..="
   "::" "::<"
   "@" "?" "|>"
@@ -62,11 +62,11 @@
 ; token makes the whole query fail to load.
 [
   "as" "async" "await" "comptime" "const" "crate" "enum"
-  "extern" "fn" "impl" "let" "mod" "mut" "package" "pub" "self"
+  "extern" "fn" "impl" "let" "mod" "mut" "newtype" "package" "packed" "pub" "self"
   "Self" "static" "struct" "super" "trait" "type" "unsafe" "use"
   "where" "yield"
   "if" "else" "match" "loop" "while" "for" "in" "break"
-  "continue" "return" "defer" "select" "go" "arena" "cohort"
+  "continue" "return" "defer" "select" "default" "arena" "cohort"
 ] @keyword
 
 (reserved_keyword) @keyword

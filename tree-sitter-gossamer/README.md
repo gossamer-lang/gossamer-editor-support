@@ -28,7 +28,7 @@ npx tree-sitter parse path/to/file.gos
 
 ## Status
 
-Tracks Gossamer 0.55.6: collection literals (`#[..]` Vec, `#{..}` Set,
+Tracks Gossamer 0.61.0: collection literals (`#[..]` Vec, `#{..}` Set,
 `{k: v}` Map), triple-quoted `""" ... """` strings, `cohort { }` and
 `arena { }` blocks, `comptime` blocks and functions, `let ... else`,
 `if let` / `while let` chains, labels, open ranges, slice patterns,
@@ -37,15 +37,20 @@ tuple index access (`t.0.1`), both closure forms (`|x| body` and
 turbofish calls (`from_json::<T>(...)`), const-generic literal
 arguments, closure trait types (`Fn(i64) -> i64`), associated types and
 their equality constraints (`T: Iterator<Item = i64>`), parameter
-defaults and named arguments, braced named-struct literals with keyed
-and `..base` fields, variant-level attributes (`#[default]`), and
-UAX #31 Unicode identifiers.
+defaults and `name: value` arguments, braced named-struct literals with
+keyed and `..base` fields, variant-level attributes (`#[default]`),
+comma-list bindings and assignments (`let tx, rx = channel()`,
+`a, b = b, a`), the wrapping operators (`+%`, `-%`, `*%`), `packed enum`
+and `enum Level: u16` representations, `newtype` aliases,
+`pub(package)`, `use "example.com/pkg" as alias`, raw strings holding
+quotes (`r#"a "b""#`), the block words as ordinary names
+(`let select = 1`, `q.defer()`), and UAX #31 Unicode identifiers.
 
 Delimited lists take a newline wherever a comma would go, so struct
 fields, enum variants, arguments, and match arms parse unseparated
 across lines. `src/scanner.c` is the external scanner: it lexes nesting
-block comments, triple-quoted strings, and the zero-width separator
-that a line break stands for. Compile it alongside `src/parser.c`.
+block comments, triple-quoted strings, raw strings, and the zero-width
+separator that a line break stands for. Compile it alongside `src/parser.c`.
 
 Every example and feature-test file in the Gossamer repository parses
 without ERROR nodes, except the diagnostics fixture that is deliberately

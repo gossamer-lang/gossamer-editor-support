@@ -63,7 +63,11 @@ if [ -f "$TARGET_TOML" ]; then
 fi
 
 {
-    echo ""
+    # One blank line separates the block from existing content; a re-run
+    # finds that line already in place.
+    if [ -s "$TARGET_TOML" ] && [ -n "$(tail -n 1 "$TARGET_TOML")" ]; then
+        echo ""
+    fi
     echo "$BEGIN_MARKER"
     sed "s|^source = { git = .*\$|source = { path = \"$GRAMMAR_DIR\" }|" "$SRC_TOML"
     echo "$END_MARKER"

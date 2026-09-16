@@ -153,12 +153,42 @@
           "match": "\\bcohort\\b(?=\\s*[({])"
         },
         {
+          "comment": "`select` is contextual: a keyword only when it opens a block",
           "name": "keyword.control.gossamer",
-          "match": "\\b(if|else|match|loop|while|for|in|break|continue|return|yield|defer|select|go)\\b"
+          "match": "\\bselect\\b(?=\\s*\\{)"
+        },
+        {
+          "comment": "`defer` is contextual: a keyword only before the statement it defers",
+          "name": "keyword.control.gossamer",
+          "match": "\\bdefer\\b(?=\\s*\\{|\\s+[A-Za-z_])"
+        },
+        {
+          "comment": "`default` is a keyword only as a `select` arm",
+          "name": "keyword.control.gossamer",
+          "match": "\\bdefault\\b(?=\\s*=>)"
+        },
+        {
+          "comment": "`comptime` is contextual: a keyword before a block, a `fn`, or a parameter",
+          "name": "keyword.other.gossamer",
+          "match": "\\bcomptime\\b(?=\\s*\\{|\\s+[A-Za-z_])"
+        },
+        {
+          "comment": "`newtype` is contextual: a keyword only before the name it declares",
+          "name": "keyword.other.gossamer",
+          "match": "\\bnewtype\\b(?=\\s+[A-Za-z_])"
+        },
+        {
+          "comment": "`packed` is contextual: a keyword only before `enum`",
+          "name": "keyword.other.gossamer",
+          "match": "\\bpacked\\b(?=\\s+enum\\b)"
+        },
+        {
+          "name": "keyword.control.gossamer",
+          "match": "\\b(if|else|match|loop|while|for|in|break|continue|return|yield)\\b"
         },
         {
           "name": "keyword.other.gossamer",
-          "match": "\\b(as|async|await|comptime|const|crate|enum|extern|fn|impl|let|mod|mut|package|pub|self|Self|static|struct|super|trait|type|unsafe|use|where|yield)\\b"
+          "match": "\\b(as|async|await|const|crate|enum|extern|fn|impl|let|mod|mut|package|pub|self|Self|static|struct|super|trait|type|unsafe|use|where)\\b"
         },
         {
           "name": "entity.name.function.macro.gossamer",
@@ -202,7 +232,7 @@
       "patterns": [
         {
           "name": "keyword.operator.gossamer",
-          "match": "(==|!=|<=|>=|&&|\\|\\||<<=|>>=|<<|>>|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|->|=>|\\.\\.\\.|\\.\\.=|\\.\\.|::)"
+          "match": "(\\+%=|-%=|\\*%=|\\+%|-%|\\*%|==|!=|<=|>=|&&|\\|\\||<<=|>>=|<<|>>|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|->|=>|\\.\\.\\.|\\.\\.=|\\.\\.|::)"
         },
         {
           "name": "keyword.operator.gossamer",
@@ -214,7 +244,7 @@
       "patterns": [
         {
           "name": "support.function.builtin.gossamer",
-          "match": "\\b(assert_eq|assert|spawn|channel)\\b(?=\\s*\\()"
+          "match": "\\b(assert_eq|assert|spawn|channel|println|print|eprintln|eprint|format|panic|matches|todo|unimplemented|unreachable|dbg|codegen)\\b(?=\\s*\\()"
         },
         {
           "name": "entity.name.function.gossamer",

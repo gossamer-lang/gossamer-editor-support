@@ -21,8 +21,9 @@ const PREC = {
   or: 2,
   range: 1,
   pipe: 0,
-  assign: -1,
-  closure: -2,
+  list: -1,
+  assign: -2,
+  closure: -3,
 };
 
 const integer_types = [
@@ -31,6 +32,10 @@ const integer_types = [
 ];
 
 const float_types = ["f32", "f64"];
+
+const contextual_words = [
+  "arena", "cohort", "comptime", "default", "defer", "newtype", "packed", "select",
+];
 
 const primitive_types = integer_types
   .concat(float_types)
@@ -45,14 +50,17 @@ module.exports = grammar({
     $.block_comment,
   ],
 
-  // Block comments nest (`/* a /* b */ c */` is one comment) and a
+  // Block comments nest (`/* a /* b */ c */` is one comment), a
   // triple-quoted body runs across lines to the first `"""` an escape has
-  // not consumed. Neither is expressible as a single regex token, so
-  // src/scanner.c lexes both.
+  // not consumed, and a raw string closes only at a quote followed by as many
+  // `#` as opened it. None is expressible as a single regex token, so
+  // src/scanner.c lexes them.
   externals: $ => [
     $.block_comment,
     $.multiline_string_literal,
     $._line_separator,
+    $.raw_string_literal,
+    $.raw_byte_string_literal,
   ],
 
   word: $ => $.identifier,
@@ -62,10 +70,8 @@ module.exports = grammar({
     [$._pattern, $.struct_pattern],
     [$._pattern, $.tuple_struct_pattern],
     [$._pattern, $._expression],
-    [$._expression, $.tuple_struct_pattern],
     [$.tuple_expression, $.tuple_pattern],
     [$.struct_expression, $.struct_pattern],
-    [$._item, $.associated_type_item, $.associated_const_item],
     [$.slice_pattern, $.array_expression],
     [$._path_segment, $.struct_pattern],
     [$._path_segment, $._type],
@@ -73,13 +79,23 @@ module.exports = grammar({
     [$.const_item, $.associated_const_item],
     [$.tuple_field_declaration, $.tuple_type],
     [$._expression, $._index_receiver],
+    [$.attribute, $.call_expression],
+    [$._visibility],
   ],
 
   rules: {
     // Entry files may contain bare statements alongside items.
     source_file: $ => repeat($._statement),
 
+    // An outer attribute belongs to the item after it, which is what keeps a
+    // `#[f(x)]` Vec literal at the end of a block from reading as one.
     _item: $ => choice(
+      $._bare_item,
+      seq(repeat1($.attribute_item), $._bare_item),
+      alias($._inner_attribute_item, $.attribute_item),
+    ),
+
+    _bare_item: $ => choice(
       $.use_declaration,
       $.const_item,
       $.static_item,
@@ -88,7 +104,6 @@ module.exports = grammar({
       $.trait_item,
       $.impl_item,
       $.function_item,
-      $.attribute_item,
       $.mod_item,
       $.type_item,
       $.extern_item,
@@ -96,39 +111,34 @@ module.exports = grammar({
 
     line_comment: _ => token(seq("//", /[^\n]*/)),
 
-    // An attribute names a path, optionally with arguments; that is what
-    // separates `#[derive(Debug)]` from the `#[1, 2]` Vec literal, which no
-    // path can begin.
-    attribute_item: $ => seq(
-      choice("#[", "#!["),
-      $.attribute,
-      "]",
-    ),
+    // An attribute names a path, optionally with arguments. `#[f(x)]` is
+    // also a one-element Vec literal, so both readings stay open until the
+    // input settles it, and the attribute wins a tie.
+    attribute_item: $ => seq("#[", $.attribute, "]"),
 
-    attribute: $ => prec(2, seq(
+    _inner_attribute_item: $ => seq("#![", $.attribute, "]"),
+
+    attribute: $ => prec(PREC.postfix, prec.dynamic(1, seq(
       $._path,
       optional(choice(
-        seq("(", optional($._token_tree), ")"),
+        seq("(", commaSep($, choice($.named_argument, $._expression)), ")"),
         seq("=", $._expression),
       )),
-    )),
+    ))),
 
-    _token_tree: $ => repeat1(choice(
-      /[^\[\](){}]+/,
-      seq("[", $._token_tree, "]"),
-      seq("(", $._token_tree, ")"),
-      seq("{", $._token_tree, "}"),
-    )),
+    // `pub(package)` is the one restricted form the language has.
+    _visibility: $ => seq("pub", optional(seq("(", "package", ")"))),
 
     use_declaration: $ => prec.right(seq(
-      optional("pub"),
+      optional($._visibility),
       "use",
       $._use_path,
       optional(";"),
     )),
 
+    // A string names a project dependency: `use "example.com/intcode" as ic`.
     _use_path: $ => seq(
-      $._path_segment,
+      choice($._path_segment, $.string_literal),
       optional(choice(
         seq("::", "*"),
         seq("::", "{", commaSep($, $._use_path), "}"),
@@ -143,7 +153,7 @@ module.exports = grammar({
     ),
 
     _path_segment: $ => choice(
-      $.identifier,
+      $._name,
       $.type_identifier,
       "self",
       "Self",
@@ -157,16 +167,17 @@ module.exports = grammar({
     )),
 
     mod_item: $ => seq(
-      optional("pub"),
+      optional($._visibility),
       "mod",
       field("name", $.identifier),
       choice(";", $.declaration_block),
     ),
 
+    // `newtype` is the opaque form: a distinct type over the same representation.
     type_item: $ => prec.right(seq(
-      optional("pub"),
-      "type",
-      field("name", $.identifier),
+      optional($._visibility),
+      choice("type", "newtype"),
+      field("name", choice($.type_identifier, $.identifier)),
       optional($.type_parameters),
       "=",
       $._type,
@@ -181,7 +192,7 @@ module.exports = grammar({
     ),
 
     const_item: $ => prec.right(seq(
-      optional("pub"),
+      optional($._visibility),
       "const",
       field("name", $.identifier),
       ":",
@@ -192,7 +203,7 @@ module.exports = grammar({
     )),
 
     static_item: $ => prec.right(seq(
-      optional("pub"),
+      optional($._visibility),
       "static",
       optional("mut"),
       field("name", $.identifier),
@@ -204,7 +215,7 @@ module.exports = grammar({
     )),
 
     struct_item: $ => prec.right(seq(
-      optional("pub"),
+      optional($._visibility),
       "struct",
       field("name", $.type_identifier),
       optional($.type_parameters),
@@ -213,15 +224,20 @@ module.exports = grammar({
         seq("{", commaSep($, $.field_declaration), "}"),
         seq("(", commaSep($, $.tuple_field_declaration), ")", optional(";")),
         ";",
+        blank(),
       ),
       optional(seq("where", commaSep1($, $.where_clause))),
     )),
 
+    // `packed` stores the discriminant in the fewest bits, and `: uN` names
+    // its width; `u1`..`u64` are all accepted, so the width is a plain name.
     enum_item: $ => seq(
-      optional("pub"),
+      optional($._visibility),
+      optional("packed"),
       "enum",
       field("name", $.type_identifier),
       optional($.type_parameters),
+      optional(seq(":", field("representation", choice($.primitive_type, $.identifier)))),
       optional(seq("where", commaSep1($, $.where_clause))),
       "{",
       commaSep($, $.enum_variant),
@@ -240,20 +256,20 @@ module.exports = grammar({
 
     field_declaration: $ => seq(
       repeat($.attribute_item),
-      optional("pub"),
-      field("name", $.identifier),
+      optional($._visibility),
+      field("name", $._name),
       ":",
       field("type", $._type),
     ),
 
     tuple_field_declaration: $ => seq(
       repeat($.attribute_item),
-      optional("pub"),
+      optional($._visibility),
       field("type", $._type),
     ),
 
     trait_item: $ => seq(
-      optional("pub"),
+      optional($._visibility),
       "trait",
       field("name", $.type_identifier),
       optional($.type_parameters),
@@ -279,9 +295,9 @@ module.exports = grammar({
 
     associated_type_item: $ => seq(
       repeat($.attribute_item),
-      optional("pub"),
+      optional($._visibility),
       "type",
-      field("name", $.identifier),
+      field("name", choice($.type_identifier, $.identifier)),
       optional(seq(":", $._type, repeat(seq("+", $._type)))),
       optional(seq("=", $._type)),
       optional(";"),
@@ -289,7 +305,7 @@ module.exports = grammar({
 
     associated_const_item: $ => seq(
       repeat($.attribute_item),
-      optional("pub"),
+      optional($._visibility),
       "const",
       field("name", $.identifier),
       ":",
@@ -299,11 +315,11 @@ module.exports = grammar({
     ),
 
     function_item: $ => prec.right(seq(
-      optional("pub"),
+      optional($._visibility),
       optional("comptime"),
       optional("unsafe"),
       "fn",
-      field("name", $.identifier),
+      field("name", $._name),
       optional($.type_parameters),
       field("parameters", $.parameters),
       optional(seq("->", field("return_type", $._type))),
@@ -359,6 +375,7 @@ module.exports = grammar({
       $.arena_block,
       $._item,
       prec.right(seq($._expression, optional(";"))),
+      prec.right(seq($.destructuring_assignment, optional(";"))),
       ";",
     ),
 
@@ -381,14 +398,23 @@ module.exports = grammar({
       ")",
     ),
 
+    // `let a, b = pair` and `let x, y = 7, 8` bind a plain list; only a
+    // comma separates its elements.
     let_declaration: $ => prec.right(seq(
       "let",
-      field("pattern", $._pattern),
+      field("pattern", choice($._pattern, $.pattern_list)),
       optional(seq(":", field("type", $._type))),
-      optional(seq("=", field("value", $._expression))),
+      optional(seq("=", field("value", choice($._expression, $.expression_list)))),
       optional(seq("else", field("alternative", $.block))),
       optional(";"),
     )),
+
+    pattern_list: $ => seq(
+      choice($._pattern, ".."),
+      repeat1(prec(-1, seq(",", choice($._pattern, "..")))),
+    ),
+
+    expression_list: $ => seq($._expression, repeat1(prec(PREC.list, seq(",", $._expression)))),
 
     _pattern: $ => choice(
       $.literal,
@@ -406,7 +432,7 @@ module.exports = grammar({
     ),
 
     // Prec -1: `&mut x` is a mutable reference pattern, not `&(mut x)`.
-    mut_pattern: $ => prec(-1, seq("mut", $.identifier)),
+    mut_pattern: $ => prec(-1, seq("mut", $._name)),
 
     tuple_pattern: $ => seq("(", commaSep($, choice($._pattern, "..")), ")"),
 
@@ -427,7 +453,7 @@ module.exports = grammar({
       $._path,
       "{",
       commaSep($, choice(
-        seq($.identifier, optional(seq(":", $._pattern))),
+        seq($._name, optional(seq(":", $._pattern))),
         "..",
       )),
       "}",
@@ -443,7 +469,7 @@ module.exports = grammar({
 
     or_pattern: $ => prec.left(seq($._pattern, "|", $._pattern)),
 
-    captured_pattern: $ => prec(2, seq($.identifier, "@", $._pattern)),
+    captured_pattern: $ => prec(2, seq($._name, "@", $._pattern)),
 
     _type: $ => choice(
       $.primitive_type,
@@ -534,7 +560,6 @@ module.exports = grammar({
       $.return_expression,
       $.break_expression,
       $.continue_expression,
-      $.go_expression,
       $.defer_expression,
       $.select_expression,
       $.closure_expression,
@@ -585,24 +610,6 @@ module.exports = grammar({
       '"',
     )),
 
-    raw_string_literal: _ => token(seq(
-      "r",
-      /#*/,
-      '"',
-      /[^"]*/,
-      '"',
-      /#*/,
-    )),
-
-    raw_byte_string_literal: _ => token(seq(
-      "br",
-      /#*/,
-      '"',
-      /[^"]*/,
-      '"',
-      /#*/,
-    )),
-
     byte_string_literal: _ => token(seq(
       'b"',
       repeat(choice(/[^"\\]/, /\\([nrt0\\"']|x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\})/)),
@@ -638,6 +645,12 @@ module.exports = grammar({
     // Unicode identifiers per UAX #31 (`let cafe = 1` and `let café = 1` parse).
     identifier: _ => /[_\p{XID_Start}][\p{XID_Continue}]*/,
 
+    // The block words open their construct only where one can start and are
+    // ordinary names everywhere else: `let select = 1`, `q.defer()`.
+    _name: $ => choice($.identifier, $._contextual_word),
+
+    _contextual_word: $ => prec(-1, alias(choice(...contextual_words), $.identifier)),
+
     unary_expression: $ => prec(PREC.unary, choice(
       seq("-", $._expression),
       seq("!", $._expression),
@@ -652,8 +665,8 @@ module.exports = grammar({
 
     binary_expression: $ => {
       const table = [
-        [PREC.multiplicative, choice("*", "/", "%")],
-        [PREC.additive, choice("+", "-")],
+        [PREC.multiplicative, choice("*", "/", "%", "*%")],
+        [PREC.additive, choice("+", "-", "+%", "-%")],
         [PREC.shift, choice("<<", ">>")],
         [PREC.bitand, "&"],
         [PREC.bitxor, "^"],
@@ -672,18 +685,32 @@ module.exports = grammar({
 
     assignment_expression: $ => prec.right(PREC.assign, seq(
       $._expression,
-      choice("=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="),
+      $._assignment_operator,
       $._expression,
     )),
+
+    // `a, b = b, a` swaps and `x, y += 2, 3` pairs element-wise; a place
+    // list only stands as a whole statement.
+    destructuring_assignment: $ => prec.right(PREC.assign, seq(
+      field("left", $.expression_list),
+      $._assignment_operator,
+      field("right", choice($._expression, $.expression_list)),
+    )),
+
+    _assignment_operator: _ => choice(
+      "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=", "+%=", "-%=", "*%=",
+    ),
 
     range_expression: $ => prec.left(PREC.range, choice(
       seq($._expression, choice("..", "..="), optional($._expression)),
       seq(choice("..", "..="), optional($._expression)),
     )),
 
+    // A label binds with `:`; the `=` spelling still parses, as the compiler
+    // rewrites it rather than rejecting the call.
     named_argument: $ => prec(2, seq(
-      field("name", $.identifier),
-      "=",
+      field("name", $._name),
+      choice(":", "="),
       field("value", $._expression),
     )),
 
@@ -693,6 +720,7 @@ module.exports = grammar({
         $.field_expression,
         $.method_call_expression,
         $.generic_function,
+        $.index_expression,
         $.parenthesized_expression,
       )),
       field("arguments", seq(
@@ -730,16 +758,16 @@ module.exports = grammar({
     field_expression: $ => prec(PREC.postfix, seq(
       $._expression,
       ".",
-      choice($.identifier, "await", /[0-9]+/),
+      choice($._name, "await", /[0-9]+/),
     )),
 
     method_call_expression: $ => prec(14, seq(
       $._expression,
       ".",
-      choice($.identifier, "await"),
+      choice($._name, "await"),
       optional(seq("::<", commaSep1($, $._generic_arg), ">")),
       "(",
-      commaSep($, choice($._expression, $.spread_argument)),
+      commaSep($, choice($.named_argument, $._expression, $.spread_argument)),
       ")",
     )),
 
@@ -758,7 +786,7 @@ module.exports = grammar({
 
     tuple_expression: $ => choice(
       seq("(", ")"),
-      seq("(", $._expression, ",", commaSep($, $._expression), ")"),
+      seq("(", $._expression, choice(",", $._line_separator), commaSep($, $._expression), ")"),
     ),
 
     array_expression: $ => seq(
@@ -804,7 +832,7 @@ module.exports = grammar({
       $._path,
       "{",
       commaSep($, choice(
-        seq($.identifier, ":", $._expression),
+        seq($._name, ":", $._expression),
         $.struct_spread_field,
         $._expression,
       )),
@@ -841,6 +869,7 @@ module.exports = grammar({
       $.tuple_expression,
       $.array_expression,
       $.parenthesized_expression,
+      $.match_expression,
     )),
 
     let_chain_condition: $ => choice(
@@ -903,8 +932,6 @@ module.exports = grammar({
 
     continue_expression: $ => prec.right(seq("continue", optional($.label))),
 
-    go_expression: $ => prec.right(seq("go", $._expression)),
-
     defer_expression: $ => prec.right(seq("defer", $._expression)),
 
     unsafe_expression: $ => seq("unsafe", $.block),
@@ -949,7 +976,7 @@ module.exports = grammar({
         $.tuple_pattern,
         $.reference_pattern,
         "_",
-        $.identifier,
+        $._name,
       )),
       optional(seq(":", field("type", $._type))),
     ),

@@ -29,13 +29,13 @@
   "Syntax table for `gossamer-mode'.")
 
 (defconst gossamer-keywords
-  '("as" "async" "await" "comptime" "const" "crate" "enum" "extern" "fn"
+  '("as" "async" "await" "const" "crate" "enum" "extern" "fn"
     "impl" "let" "mod" "mut" "package" "pub" "self" "Self" "static"
     "struct" "super" "trait" "type" "unsafe" "use" "where" "yield"))
 
 (defconst gossamer-control
   '("if" "else" "match" "loop" "while" "for" "in" "break" "continue"
-    "return" "yield" "defer" "select" "go"))
+    "return"))
 
 (defconst gossamer-types
   '("bool" "char" "str" "String" "Never" "Unit"
@@ -48,16 +48,24 @@
     "Vec" "Weak"))
 
 (defconst gossamer-builtins
-  '("assert" "assert_eq" "spawn" "channel")
-  "Prelude functions no module exports.")
+  '("assert" "assert_eq" "spawn" "channel"
+    "println" "print" "eprintln" "eprint" "format" "panic"
+    "matches" "todo" "unimplemented" "unreachable" "dbg" "codegen")
+  "Prelude functions no module exports, and the compiler-known calls.")
 
 (defconst gossamer-constants
   '("true" "false" "None" "Some" "Ok" "Err"))
 
 (defconst gossamer-font-lock-keywords
-  `(;; `arena` and `cohort` are contextual: keywords only when they open a block.
+  `(;; The block words are contextual: keywords only where their construct
+    ;; starts, ordinary names everywhere else.
     ("\\_<\\(arena\\)\\_>\\s-*{" 1 font-lock-keyword-face)
     ("\\_<\\(cohort\\)\\_>\\s-*[({]" 1 font-lock-keyword-face)
+    ("\\_<\\(select\\)\\_>\\s-*{" 1 font-lock-keyword-face)
+    ("\\_<\\(defer\\|comptime\\)\\_>\\(?:\\s-*{\\|\\s-+[[:alpha:]_]\\)" 1 font-lock-keyword-face)
+    ("\\_<\\(default\\)\\_>\\s-*=>" 1 font-lock-keyword-face)
+    ("\\_<\\(newtype\\)\\_>\\s-+[[:alpha:]_]" 1 font-lock-keyword-face)
+    ("\\_<\\(packed\\)\\_>\\s-+enum\\_>" 1 font-lock-keyword-face)
     (,(regexp-opt gossamer-keywords 'symbols) . font-lock-keyword-face)
     (,(regexp-opt gossamer-control 'symbols) . font-lock-keyword-face)
     (,(regexp-opt gossamer-types 'symbols) . font-lock-type-face)
@@ -74,18 +82,36 @@
     ("\\<[a-zA-Z_][a-zA-Z0-9_]*!" . font-lock-preprocessor-face)))
 
 (defun gossamer-syntax-propertize (start end)
-  "Give each `\"\"\"` between START and END a generic string fence.
-Fences alternate, so the parser state at START decides whether the first
-delimiter found opens or closes a triple-quoted literal."
+  "Mark the string literals between START and END that the syntax table cannot.
+A `\"\"\"` literal and a raw `r#\"..\"#` literal each get a generic string
+fence at both ends: the first may hold a lone quote, and the second holds
+quotes and backslashes with no escapes, and ends only at a quote followed by
+as many `#` as opened it."
   (goto-char start)
-  (let ((opening (not (nth 3 (syntax-ppss start)))))
-    (while (re-search-forward "\"\"\"" end t)
-      (if opening
-          (put-text-property (match-beginning 0) (1+ (match-beginning 0))
-                             'syntax-table (string-to-syntax "|"))
-        (put-text-property (1- (match-end 0)) (match-end 0)
-                           'syntax-table (string-to-syntax "|")))
-      (setq opening (not opening)))))
+  (while (re-search-forward "\"\"\"\\|\\_<b?r\\(#*\\)\"" end t)
+    (let* ((match-start (match-beginning 0))
+           (state (save-excursion (syntax-ppss match-start)))
+           (fence (string-to-syntax "|")))
+      (cond
+       ((nth 4 state))
+       ((match-beginning 1)
+        (unless (nth 3 state)
+          (let ((hashes (match-string 1))
+                (body (match-end 0)))
+            (put-text-property (1- body) body 'syntax-table fence)
+            (when (search-forward (concat "\"" hashes) nil t)
+              (let ((quote (- (point) (length hashes) 1)))
+                (save-excursion
+                  (goto-char body)
+                  (while (search-forward "\\" quote t)
+                    (put-text-property (1- (point)) (point)
+                                       'syntax-table (string-to-syntax "."))))
+                (put-text-property quote (1+ quote) 'syntax-table fence))))))
+       ((eq (nth 3 state) t)
+        (put-text-property (1- (match-end 0)) (match-end 0) 'syntax-table fence))
+       ((not (nth 3 state))
+        (put-text-property match-start (1+ match-start) 'syntax-table fence)
+        (goto-char (1+ match-start)))))))
 
 (defcustom gossamer-indent-offset 4
   "Indentation offset for `gossamer-mode'."

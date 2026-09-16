@@ -435,7 +435,13 @@ enum Token {
 (source_file
   (attribute_item
     (attribute
-      (identifier)))
+      (identifier)
+      (type_identifier)
+      (type_identifier)
+      (type_identifier)
+      (type_identifier)
+      (type_identifier)
+      (type_identifier)))
   (enum_item
     (type_identifier)
     (enum_variant

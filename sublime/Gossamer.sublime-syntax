@@ -93,14 +93,27 @@ contexts:
       scope: constant.numeric.decimal.gossamer
 
   keywords:
-    # `arena` and `cohort` are contextual: keywords only when they open a block.
+    # The block words are contextual: keywords only where their construct
+    # starts, ordinary names everywhere else.
     - match: '\barena\b(?=\s*\{)'
       scope: keyword.control.gossamer
     - match: '\bcohort\b(?=\s*[({])'
       scope: keyword.control.gossamer
-    - match: '\b(if|else|match|loop|while|for|in|break|continue|return|yield|defer|select|go)\b'
+    - match: '\bselect\b(?=\s*\{)'
       scope: keyword.control.gossamer
-    - match: '\b(as|async|await|comptime|const|crate|enum|extern|fn|impl|let|mod|mut|package|pub|self|Self|static|struct|super|trait|type|unsafe|use|where|yield)\b'
+    - match: '\bdefer\b(?=\s*\{|\s+[A-Za-z_])'
+      scope: keyword.control.gossamer
+    - match: '\bdefault\b(?=\s*=>)'
+      scope: keyword.control.gossamer
+    - match: '\bcomptime\b(?=\s*\{|\s+[A-Za-z_])'
+      scope: keyword.other.gossamer
+    - match: '\bnewtype\b(?=\s+[A-Za-z_])'
+      scope: keyword.other.gossamer
+    - match: '\bpacked\b(?=\s+enum\b)'
+      scope: keyword.other.gossamer
+    - match: '\b(if|else|match|loop|while|for|in|break|continue|return|yield)\b'
+      scope: keyword.control.gossamer
+    - match: '\b(as|async|await|const|crate|enum|extern|fn|impl|let|mod|mut|package|pub|self|Self|static|struct|super|trait|type|unsafe|use|where)\b'
       scope: keyword.other.gossamer
     - match: '\b{{ident}}!'
       scope: entity.name.function.macro.gossamer
@@ -120,13 +133,13 @@ contexts:
   operators:
     - match: '\|>'
       scope: keyword.operator.pipe.gossamer
-    - match: '(==|!=|<=|>=|&&|\|\||<<=|>>=|<<|>>|\+=|-=|\*=|/=|%=|&=|\|=|\^=|->|=>|\.\.\.|\.\.=|\.\.|::)'
+    - match: '(\+%=|-%=|\*%=|\+%|-%|\*%|==|!=|<=|>=|&&|\|\||<<=|>>=|<<|>>|\+=|-=|\*=|/=|%=|&=|\|=|\^=|->|=>|\.\.\.|\.\.=|\.\.|::)'
       scope: keyword.operator.gossamer
     - match: '[+\-*/%<>!~|&^?.=@#]'
       scope: keyword.operator.gossamer
 
   functions:
-    - match: '\b(assert_eq|assert|spawn|channel)\b(?=\s*\()'
+    - match: '\b(assert_eq|assert|spawn|channel|println|print|eprintln|eprint|format|panic|matches|todo|unimplemented|unreachable|dbg|codegen)\b(?=\s*\()'
       scope: support.function.builtin.gossamer
     - match: '\b({{ident}})\s*(?=\()'
       captures:

@@ -14,14 +14,21 @@ syntax case match
 " into following lines.
 setlocal synmaxcol=0
 
-syntax keyword gossamerKeyword as async await comptime const crate enum extern fn
+syntax keyword gossamerKeyword as async await const crate enum extern fn
 syntax keyword gossamerKeyword impl let mod mut package pub self Self static
 syntax keyword gossamerKeyword struct super trait type unsafe use where yield
 syntax keyword gossamerControl if else match loop while for in break continue
-syntax keyword gossamerControl return yield defer select go
-" `arena` and `cohort` are contextual: keywords only when they open a block.
+syntax keyword gossamerControl return
+" The block words are contextual: keywords only where their construct starts,
+" ordinary names everywhere else.
 syntax match gossamerControl "\<arena\>\ze\s*{"
 syntax match gossamerControl "\<cohort\>\ze\s*[({]"
+syntax match gossamerControl "\<select\>\ze\s*{"
+syntax match gossamerControl "\<defer\>\ze\%(\s*{\|\s\+\h\)"
+syntax match gossamerControl "\<default\>\ze\s*=>"
+syntax match gossamerKeyword "\<comptime\>\ze\%(\s*{\|\s\+\h\)"
+syntax match gossamerKeyword "\<newtype\>\ze\s\+\h"
+syntax match gossamerKeyword "\<packed\>\ze\s\+enum\>"
 
 syntax keyword gossamerType bool char str String Never Unit
 syntax keyword gossamerType i8 i16 i32 i64 i128 isize
@@ -32,8 +39,10 @@ syntax keyword gossamerType I64Vec Iterator Map MaxHeap MinHeap Mutex Option
 syntax keyword gossamerType Queue Range Rc Receiver Result RwLock Sender Set
 syntax keyword gossamerType Stack U8Vec Vec Weak
 
-" Prelude functions no module exports.
+" Prelude functions no module exports, and the compiler-known calls.
 syntax keyword gossamerBuiltin assert assert_eq spawn channel
+syntax keyword gossamerBuiltin println print eprintln eprint format panic
+syntax keyword gossamerBuiltin matches todo unimplemented unreachable dbg codegen
 
 syntax keyword gossamerBoolean true false
 syntax keyword gossamerConstant None Some Ok Err
@@ -70,6 +79,7 @@ syntax match gossamerOperator ">>="
 syntax match gossamerOperator "\.\.="
 syntax match gossamerOperator "\.\."
 syntax match gossamerOperator "[+\-*%=<>!&|^~?@]"
+syntax match gossamerOperator "[+\-*]%=\="
 syntax match gossamerOperator "\(//\|/\*\)\@!/"
 syntax match gossamerOperator "->"
 syntax match gossamerOperator "=>"

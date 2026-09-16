@@ -1,0 +1,518 @@
+================================================================================
+empty string before newline-separated fields
+================================================================================
+
+impl C {
+    fn new() -> C {
+        C {
+            text: ""
+            items: #[]
+            count: 0
+        }
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (impl_item
+    (type_identifier)
+    (declaration_block
+      (function_item
+        (identifier)
+        (parameters)
+        (type_identifier)
+        (block
+          (struct_expression
+            (type_identifier)
+            (identifier)
+            (literal
+              (string_literal))
+            (identifier)
+            (vec_literal)
+            (identifier)
+            (literal
+              (integer_literal))))))))
+
+================================================================================
+wrapping arithmetic operators
+================================================================================
+
+fn main() {
+    let mut h: u32 = 5381
+    h = (h << 5) +% h +% b as u32
+    h -%= 1
+    h *%= 3
+    let w = 5
+        *% 2
+        -% 1
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (mut_pattern
+          (identifier))
+        (primitive_type)
+        (literal
+          (integer_literal)))
+      (assignment_expression
+        (identifier)
+        (binary_expression
+          (binary_expression
+            (parenthesized_expression
+              (binary_expression
+                (identifier)
+                (literal
+                  (integer_literal))))
+            (identifier))
+          (cast_expression
+            (identifier)
+            (primitive_type))))
+      (assignment_expression
+        (identifier)
+        (literal
+          (integer_literal)))
+      (assignment_expression
+        (identifier)
+        (literal
+          (integer_literal)))
+      (let_declaration
+        (identifier)
+        (binary_expression
+          (binary_expression
+            (literal
+              (integer_literal))
+            (literal
+              (integer_literal)))
+          (literal
+            (integer_literal)))))))
+
+================================================================================
+comma-separated let and assignment
+================================================================================
+
+fn main() {
+    let tx, rx = channel()
+    let mut x, mut y = 7, 8
+    let first, .., last = (1, 2, 3)
+    x, y = y, x
+    x, y += 2, 3
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (pattern_list
+          (identifier)
+          (identifier))
+        (call_expression
+          (identifier)))
+      (let_declaration
+        (pattern_list
+          (mut_pattern
+            (identifier))
+          (mut_pattern
+            (identifier)))
+        (expression_list
+          (literal
+            (integer_literal))
+          (literal
+            (integer_literal))))
+      (let_declaration
+        (pattern_list
+          (identifier)
+          (identifier))
+        (tuple_expression
+          (literal
+            (integer_literal))
+          (literal
+            (integer_literal))
+          (literal
+            (integer_literal))))
+      (destructuring_assignment
+        (expression_list
+          (identifier)
+          (identifier))
+        (expression_list
+          (identifier)
+          (identifier)))
+      (destructuring_assignment
+        (expression_list
+          (identifier)
+          (identifier))
+        (expression_list
+          (literal
+            (integer_literal))
+          (literal
+            (integer_literal)))))))
+
+================================================================================
+enum representation and newtype
+================================================================================
+
+packed enum Bit: u1 { Off, On }
+enum Level: u16 { Debug, Info }
+newtype UserId = i64
+struct Marker
+pub(package) fn helper() {}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enum_item
+    (type_identifier)
+    (identifier)
+    (enum_variant
+      (type_identifier))
+    (enum_variant
+      (type_identifier)))
+  (enum_item
+    (type_identifier)
+    (primitive_type)
+    (enum_variant
+      (type_identifier))
+    (enum_variant
+      (type_identifier)))
+  (type_item
+    (type_identifier)
+    (primitive_type))
+  (struct_item
+    (type_identifier))
+  (function_item
+    (identifier)
+    (parameters)
+    (block)))
+
+================================================================================
+contextual block words as names
+================================================================================
+
+struct Query { select: String, defer: i64 }
+fn packed(count: i64) -> i64 { count + 1 }
+fn main() {
+    let q = Query { select: "rows", defer: 4 }
+    let mut select = 10
+    select += 5
+    println("{}", q.select(3))
+    defer println("last")
+    select {
+        v = rx.recv() => println("{:?}", v)
+        default => {}
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_item
+    (type_identifier)
+    (field_declaration
+      (identifier)
+      (type_identifier))
+    (field_declaration
+      (identifier)
+      (primitive_type)))
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (primitive_type)))
+    (primitive_type)
+    (block
+      (binary_expression
+        (identifier)
+        (literal
+          (integer_literal)))))
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (struct_expression
+          (type_identifier)
+          (identifier)
+          (literal
+            (string_literal))
+          (identifier)
+          (literal
+            (integer_literal))))
+      (let_declaration
+        (mut_pattern
+          (identifier))
+        (literal
+          (integer_literal)))
+      (assignment_expression
+        (identifier)
+        (literal
+          (integer_literal)))
+      (call_expression
+        (identifier)
+        (literal
+          (string_literal))
+        (method_call_expression
+          (identifier)
+          (identifier)
+          (literal
+            (integer_literal))))
+      (defer_expression
+        (call_expression
+          (identifier)
+          (literal
+            (string_literal))))
+      (select_expression
+        (select_arm
+          (assignment_expression
+            (identifier)
+            (method_call_expression
+              (identifier)
+              (identifier)))
+          (call_expression
+            (identifier)
+            (literal
+              (string_literal))
+            (identifier)))
+        (select_arm
+          (map_literal))))))
+
+================================================================================
+labelled arguments and indexed calls
+================================================================================
+
+fn main() {
+    let h = spawn(|| work(), reason: "probe")
+    volume(2, height: 3)
+    println("{}", fns[0](1.0))
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (call_expression
+          (identifier)
+          (closure_expression
+            (closure_parameters)
+            (call_expression
+              (identifier)))
+          (named_argument
+            (identifier)
+            (literal
+              (string_literal)))))
+      (call_expression
+        (identifier)
+        (literal
+          (integer_literal))
+        (named_argument
+          (identifier)
+          (literal
+            (integer_literal))))
+      (call_expression
+        (identifier)
+        (literal
+          (string_literal))
+        (call_expression
+          (index_expression
+            (identifier)
+            (literal
+              (integer_literal)))
+          (literal
+            (float_literal)))))))
+
+================================================================================
+raw strings holding quotes
+================================================================================
+
+fn main() {
+    let a = r#"raw "string" literal"#
+    let b = br##"a "# b"##
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (literal
+          (raw_string_literal)))
+      (let_declaration
+        (identifier)
+        (literal
+          (raw_byte_string_literal))))))
+
+================================================================================
+vec literal opening a block tail
+================================================================================
+
+fn solar() -> Vec<P> {
+    #[
+        planet(0.0, 1.0)
+        planet(2.0, 3.0)
+    ]
+}
+
+fn one() -> Vec<i64> {
+    #[g(1)]
+}
+
+#[derive(Debug)]
+struct A {}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (generic_type
+      (type_identifier)
+      (type_identifier))
+    (block
+      (vec_literal
+        (call_expression
+          (identifier)
+          (literal
+            (float_literal))
+          (literal
+            (float_literal)))
+        (call_expression
+          (identifier)
+          (literal
+            (float_literal))
+          (literal
+            (float_literal))))))
+  (function_item
+    (identifier)
+    (parameters)
+    (generic_type
+      (type_identifier)
+      (primitive_type))
+    (block
+      (vec_literal
+        (call_expression
+          (identifier)
+          (literal
+            (integer_literal))))))
+  (attribute_item
+    (attribute
+      (identifier)
+      (type_identifier)))
+  (struct_item
+    (type_identifier)))
+
+================================================================================
+comments before newline-separated elements
+================================================================================
+
+fn main() {
+    let v = #[
+        1
+        /* c */ 2
+        // d
+        3
+    ]
+    Ok((
+        if n { -y } else { y }
+        m.to_i64()
+    ))
+    while let Some(v) = match next(i) {
+        Some(x) => Some(x)
+        None => None
+    } {
+        i += 1
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (let_declaration
+        (identifier)
+        (vec_literal
+          (literal
+            (integer_literal))
+          (block_comment)
+          (literal
+            (integer_literal))
+          (line_comment)
+          (literal
+            (integer_literal))))
+      (call_expression
+        (type_identifier)
+        (tuple_expression
+          (if_expression
+            (identifier)
+            (block
+              (unary_expression
+                (identifier)))
+            (block
+              (identifier)))
+          (method_call_expression
+            (identifier)
+            (identifier))))
+      (while_expression
+        (let_condition
+          (tuple_struct_pattern
+            (type_identifier)
+            (identifier))
+          (match_expression
+            (call_expression
+              (identifier)
+              (identifier))
+            (match_arm
+              (tuple_struct_pattern
+                (type_identifier)
+                (identifier))
+              (call_expression
+                (type_identifier)
+                (identifier)))
+            (match_arm
+              (type_identifier)
+              (type_identifier))))
+        (block
+          (assignment_expression
+            (identifier)
+            (literal
+              (integer_literal))))))))
+
+================================================================================
+project use targets
+================================================================================
+
+use "example.com/intcode" as ic
+use "example.com/intcode"::run
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (use_declaration
+    (string_literal)
+    (identifier))
+  (use_declaration
+    (string_literal)
+    (identifier)))
